@@ -53,7 +53,7 @@ class Recording:
         sd.play(data.values, self.sampling_frequency)
         sd.wait()
 
-    def visualize(self):
+    def visualize(self, max_freq=1000):
         fig = make_subplots(rows=3, cols=1, subplot_titles=('Time Domain Signal', 'Power Spectrum', 'Spectrogram'))
         # Plot time domain signal
         fig.add_trace(go.Scatter(x=self.audio_data.times,
@@ -81,18 +81,24 @@ class Recording:
         # Plot frequency domain (power spectrum)
         psd_freqs = self.psd_cropped.frequencies if self.cropped_data is not None else self.psd.frequencies
         psd_values = self.psd_cropped.values if self.cropped_data is not None else self.psd.values
-        fig.add_trace(go.Scatter(x=psd_freqs,
-                                 y=psd_values,
+        if max_freq is None:
+            max_freq = psd_freqs[-1]
+        freq_mask = psd_freqs <= max_freq
+        fig.add_trace(go.Scatter(x=psd_freqs[freq_mask],
+                                 y=psd_values[freq_mask],
                                  mode='lines',
                                  name='Power Spectrum',
                                  yaxis='y2'), row=2, col=1)
 
         # Plot spectrogram
         freqs, times, Sxx = self.create_spectrogram()
+        if max_freq is None:
+            max_freq = freqs[-1]
+        freq_mask = freqs <= max_freq
         Sxx_db = 10 * np.log10(Sxx)
         fig.add_trace(go.Heatmap(z=Sxx_db,
                                  x=times,
-                                 y=freqs,
+                                 y=freqs[freq_mask],
                                  colorscale='Viridis',
                                  zmin=np.min(Sxx_db),
                                  zmax=np.max(Sxx_db),
@@ -100,5 +106,13 @@ class Recording:
 
         # Update layout & show plot
         fig.update_layout(title=self.name)
+        # Update x-axis titles
+        fig.update_xaxes(title_text="Time (s)", row=1, col=1)
+        fig.update_xaxes(title_text="Frequency (Hz)", row=2, col=1)
+        fig.update_xaxes(title_text="Time (s)", row=3, col=1)
+        # Update y-axis titles
+        fig.update_yaxes(title_text="Amplitude", row=1, col=1)
+        fig.update_yaxes(title_text="Power", row=2, col=1)
+        fig.update_yaxes(title_text="Frequency (Hz)", row=3, col=1)
         fig.show(renderer='browser')
 

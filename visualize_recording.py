@@ -2,6 +2,11 @@ from recording_class.recording import Recording
 from moviepy.editor import VideoFileClip
 import sounddevice as sd
 import librosa as lr
+import os
+import pandas as pd
+import pickle
+
+
 def from_mp4(file_path):
     video = VideoFileClip(file_path)
     try:
@@ -14,10 +19,19 @@ def from_mp4(file_path):
 
 
 if __name__ == '__main__':
-    path = "/Users/ocarmi/Documents/private/Aurras/drone-detection/OSINT/OSINT/Red/Ababil T/7may eretzjihad.mp4"
-    recording = from_mp4(path)
-    recording.crop(0.28, 4)
-    recording.visualize()
-    recording.play_audio()
-    a=5
+    recordings = []
+    directory = "/Users/ocarmi/Documents/private/Aurras/drone-detection/OSINT/OSINT/Red/Ababil T"
+    video_cropping_times = pd.read_csv("/Users/ocarmi/Documents/private/Aurras/drone-detection/OSINT/OSINT/Red/Ababil T/video_cropping_times.csv")
+    for file in os.listdir(directory):
+        if file.endswith(".mp4") and video_cropping_times['video_name'].str.contains(file[:-4]).any():
+            path = os.path.join(directory, file)
+            recording = from_mp4(path)
+            row = video_cropping_times.loc[video_cropping_times['video_name']==file[:-4]]
+            recording.crop(row["start_sec"].values[0], row["end_sec"].values[0])
+            recording.visualize()
+            recording.play_audio()
+            recordings.append(recording)
+            # recording.play_audio()
+    with open('/Users/ocarmi/Documents/private/Aurras/drone-detection/OSINT/OSINT/Red/Ababil T/recordings.pickle', 'wb') as f:
+        pickle.dump(recordings, f)
 
