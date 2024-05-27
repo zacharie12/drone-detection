@@ -105,8 +105,6 @@ class Recording:
 
         # Plot spectrogram
         freqs, times, Sxx = self.create_spectrogram()
-        if max_freq is None:
-            max_freq = freqs[-1]
         freq_mask = freqs <= max_freq
         Sxx_db = 10 * np.log10(Sxx)
         fig.add_trace(go.Heatmap(z=Sxx_db,
