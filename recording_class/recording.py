@@ -31,6 +31,9 @@ class TimeVector(Vector):
     def rms(self):
         return np.sqrt(np.mean(self.values**2))
 
+    def crest_factor(self):
+        return np.ptp(self.values) / np.std(self.values)
+
 
 class FrequencyVector(Vector):
     def __init__(self, data, is_time_vector=True, nfft=None):

@@ -52,6 +52,7 @@ class FeatureExtractionEpoch(object):
     def extract_features(self):
         self.features['full_bandwidth_rms'] = self.epoch.recording.audio_data.rms()
         self.features['bandpassed_rms'] = self.epoch.bandpassed_recording.audio_data.rms()
+        self.features['bandpassed_crest_factor'] = self.epoch.bandpassed_recording.audio_data.crest_factor()
         self.features["1500_to_max_rms"] = self.epoch.recording.psd.frequency_band_rms(1500)
         freq, spars, strgth = self.get_hps_features(self.epoch)
         self.features["pitch_frequency"] = freq
