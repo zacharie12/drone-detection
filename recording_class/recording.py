@@ -28,19 +28,31 @@ class TimeVector(Vector):
     def create_time(self):
         return np.arange(self.length) / self.sampling_frequency
 
+    def rms(self):
+        return np.sqrt(np.mean(self.values**2))
+
 
 class FrequencyVector(Vector):
     def __init__(self, data, is_time_vector=True, nfft=None):
         self.sampling_frequency = data.sampling_frequency
+        self.original_data_size = data.values.size
         self.nfft = data.values.size if nfft is None else nfft
         self.values = self.calc_psd(data.values) if is_time_vector else data
         self.frequencies = self.create_freqs()
+        self.max_freq = self.frequencies[-1]
+        self.freq_res = self.frequencies[1]
 
     def create_freqs(self):
         return np.fft.rfftfreq(self.nfft, d=1/self.sampling_frequency)
 
     def calc_psd(self, data):
         return np.abs(np.fft.rfft(data) * 2 / self.nfft)**2
+
+    def frequency_band_rms(self, low=0, high=None):
+        low = np.max((int(low / self.freq_res), 0))
+        high = np.min(int(high / self.freq_res), self.nfft) if high is not None else self.nfft
+        return np.sqrt(np.mean(self.values[low:high]) * self.original_data_size) / 2
+
 
 class Recording:
     def __init__(self, audio_data, sampling_frequency, name=None):
