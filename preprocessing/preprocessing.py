@@ -50,7 +50,7 @@ def HPS(recording, nfft_factor=1, numProd=6, hanning_window=True, pre_whiten=Tru
     smallestLength = int(np.ceil(N / numProd))
     hps = xf[:smallestLength].copy()
     for i in range(2, numProd + 1):
-        hps *= xf[::i][:smallestLength]
+        hps *= xf[::i][:smallestLength] / np.sum(xf[::i][:smallestLength])
     f = f[:smallestLength] * fs
 
     a=5
