@@ -3,21 +3,37 @@ from scipy.signal import spectrogram
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
-class TimeVector:
+
+class Vector:
+    def __init__(self, arr, sampling_frequency, x=None):
+        self.sampling_frequency = sampling_frequency
+        self.length = arr.size
+        self.y = arr
+        self.x = np.arange(arr.size) if x is None else x
+
+    def plot(self, title=[]):
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=self.x, y=self.y))
+        fig.update_layout(title_text=title)
+        fig.show(renderer="browser")
+
+
+class TimeVector(Vector):
     def __init__(self, arr, sampling_frequency):
         self.sampling_frequency = sampling_frequency
         self.length = arr.size
         self.values = arr
-        self.times = self.create()
+        self.times = self.create_time()
 
-    def create(self):
+    def create_time(self):
         return np.arange(self.length) / self.sampling_frequency
 
-class FrequencyVector:
-    def __init__(self, time_vector, nfft=None):
-        self.sampling_frequency = time_vector.sampling_frequency
-        self.nfft = time_vector.values.size if nfft is None else nfft
-        self.values = self.calc_psd(time_vector.values)
+
+class FrequencyVector(Vector):
+    def __init__(self, data, is_time_vector=True, nfft=None):
+        self.sampling_frequency = data.sampling_frequency
+        self.nfft = data.values.size if nfft is None else nfft
+        self.values = self.calc_psd(data.values) if is_time_vector else data
         self.frequencies = self.create_freqs()
 
     def create_freqs(self):
@@ -27,7 +43,7 @@ class FrequencyVector:
         return np.abs(np.fft.rfft(data) * 2 / self.nfft)**2
 
 class Recording:
-    def __init__(self, audio_data, sampling_frequency, name):
+    def __init__(self, audio_data, sampling_frequency, name=None):
         self.audio_data = TimeVector(audio_data, sampling_frequency)
         self.psd = FrequencyVector(self.audio_data)
         self.sampling_frequency = sampling_frequency
@@ -37,10 +53,7 @@ class Recording:
     def crop(self, start_sec, end_sec):
         start_index = int(start_sec * self.sampling_frequency)
         end_index = int(end_sec * self.sampling_frequency)
-        self.start_time = start_sec
-        self.end_time = end_sec
-        self.cropped_data = TimeVector(self.audio_data.values[start_index:end_index], self.sampling_frequency)
-        self.psd_cropped = FrequencyVector(self.cropped_data)
+        return TimeVector(self.audio_data.values[start_index:end_index], self.sampling_frequency)
 
     def create_spectrogram(self, use_cropped=True):
         data = self.cropped_data if use_cropped and self.cropped_data is not None else self.audio_data
@@ -62,25 +75,25 @@ class Recording:
                                  name='Time Domain Signal'), row=1, col=1)
         # add horizontal lines where the cropping is
         # Create horizontal lines for start and end seconds
-        shapes = []
-        if self.start_time is not None:
-            shapes.append({'type': 'line',
-                           'x0': self.start_time,
-                           'y0': min(self.audio_data.values),
-                           'x1': self.start_time,
-                           'y1': max(self.audio_data.values),
-                           'line': {'color': 'red', 'width': 2, 'dash': 'dash'}})
-        if self.end_time is not None:
-            shapes.append({'type': 'line',
-                           'x0': self.end_time,
-                           'y0': min(self.audio_data.values),
-                           'x1': self.end_time,
-                           'y1': max(self.audio_data.values),
-                           'line': {'color': 'red', 'width': 2, 'dash': 'dash'}})
-        fig.update_layout(shapes=shapes)
+        # shapes = []
+        # if self.start_time is not None:
+        #     shapes.append({'type': 'line',
+        #                    'x0': self.start_time,
+        #                    'y0': min(self.audio_data.values),
+        #                    'x1': self.start_time,
+        #                    'y1': max(self.audio_data.values),
+        #                    'line': {'color': 'red', 'width': 2, 'dash': 'dash'}})
+        # if self.end_time is not None:
+        #     shapes.append({'type': 'line',
+        #                    'x0': self.end_time,
+        #                    'y0': min(self.audio_data.values),
+        #                    'x1': self.end_time,
+        #                    'y1': max(self.audio_data.values),
+        #                    'line': {'color': 'red', 'width': 2, 'dash': 'dash'}})
+        # fig.update_layout(shapes=shapes)
         # Plot frequency domain (power spectrum)
-        psd_freqs = self.psd_cropped.frequencies if self.cropped_data is not None else self.psd.frequencies
-        psd_values = self.psd_cropped.values if self.cropped_data is not None else self.psd.values
+        psd_freqs = self.psd.frequencies
+        psd_values = self.psd.values
         if max_freq is None:
             max_freq = psd_freqs[-1]
         freq_mask = psd_freqs <= max_freq
@@ -115,4 +128,6 @@ class Recording:
         fig.update_yaxes(title_text="Power", row=2, col=1)
         fig.update_yaxes(title_text="Frequency (Hz)", row=3, col=1)
         fig.show(renderer='browser')
+
+
 
