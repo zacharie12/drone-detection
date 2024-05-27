@@ -21,8 +21,10 @@ def from_mp4(file_path):
 
 if __name__ == '__main__':
     epochs = []
-    directory = "/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Red/Ababil T"
-    video_cropping_times = pd.read_csv("/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Red/Ababil T/video_cropping_times.csv")
+    # directory = "/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Red/Ababil T" #red
+    directory = "/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Blue" # blue
+    # video_cropping_times = pd.read_csv("/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Red/Ababil T/video_cropping_times.csv") # red
+    video_cropping_times = pd.read_csv("/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Blue/video_cropping_times.csv") # blue
     for file in os.listdir(directory):
         if file.endswith(".mp4") and video_cropping_times['video_name'].str.contains(file[:-4]).any():
             path = os.path.join(directory, file)
@@ -33,7 +35,7 @@ if __name__ == '__main__':
             epoch = Epoch(recording, path.split('/')[-1].split('.')[0])
             epoch.preprocess()
             # epoch.recording.visualize()
-            epoch.bandpassed_recording.visualize()
+            # epoch.bandpassed_recording.visualize()
             epoch.crop(row["start_sec"].values[0], row["end_sec"].values[0])
             epoch.cropped_recording.visualize()
             epoch.cropped_recording.play_audio()

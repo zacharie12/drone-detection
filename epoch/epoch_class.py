@@ -28,13 +28,14 @@ class Epoch:
          f, hps = HPS(self.cropped_recording) if use_cropped and hasattr(self, 'cropped_recording') else HPS(self.bandpassed_recording)
          self.hps = Vector(hps, self.bandpassed_recording.sampling_frequency, f)
 
-    def window_recording(self, window_length_sec=0.5):
+    def window_recording(self, window_length_sec=0.5, use_cropped=False):
         recording_windows = []
-        num_windows = int(self.bandpassed_recording.audio_data.length / (window_length_sec * self.bandpassed_recording.sampling_frequency))
+        sig = self.cropped_recording if use_cropped and hasattr(self, 'cropped_recording') else self.bandpassed_recording
+        num_windows = int(sig.audio_data.length / (window_length_sec * self.bandpassed_recording.sampling_frequency))
         for i in range(num_windows):
             start = i * window_length_sec
             end = (i + 1) * window_length_sec
-            recording_window = self.bandpassed_recording.crop(start, end)
+            recording_window = sig.crop(start, end)
             recording_windows.append(Recording(recording_window.values, self.recording.sampling_frequency, self.name + '_window_' + str(i)))
         self.recording_windows = recording_windows
 

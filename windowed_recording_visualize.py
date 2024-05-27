@@ -21,8 +21,11 @@ def from_mp4(file_path):
 
 if __name__ == '__main__':
     epochs = []
-    directory = "/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Red/Ababil T"
-    video_cropping_times = pd.read_csv("/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Red/Ababil T/video_cropping_times.csv")
+    directory = "/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Red/Ababil T" #red
+    video_cropping_times = pd.read_csv(
+        "/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Red/Ababil T/video_cropping_times.csv")  # red
+    # directory = "/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Blue" # blue
+    # video_cropping_times = pd.read_csv("/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Blue/video_cropping_times.csv") # blue
     for file in os.listdir(directory):
         if file.endswith(".mp4") and video_cropping_times['video_name'].str.contains(file[:-4]).any() and 'tal' not in file and '20nov' not in file:
             path = os.path.join(directory, file)
@@ -31,9 +34,10 @@ if __name__ == '__main__':
             recording.crop(row["start_sec"].values[0], row["end_sec"].values[0])
             epoch = Epoch(recording, path.split('/')[-1].split('.')[0])
             epoch.preprocess()
-            epoch.window_recording()
+            epoch.crop(row["start_sec"].values[0], row["end_sec"].values[0])
+            epoch.window_recording(use_cropped=False)
             epoch.windows_hps()
-            # epoch.visualize_windows(max_freq=2000)
+            epoch.visualize_windows(max_freq=2000)
             a = 5
     a = 5
     # with open('/drone_detection/OSINT/OSINT/Red/Ababil T/recordings.pickle', 'wb') as f:
