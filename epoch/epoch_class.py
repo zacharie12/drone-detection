@@ -2,9 +2,11 @@ from drone_detection.preprocessing.preprocessing import bpf, HPS
 from drone_detection.recording_class.recording import Recording, Vector
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
+
+
 class Epoch:
 
-    def __init__(self, recording, name):
+    def __init__(self, recording, name=None):
         self.recording = recording
         self.name = name
 
@@ -38,6 +40,7 @@ class Epoch:
             recording_window = sig.crop(start, end)
             recording_windows.append(Recording(recording_window.values, self.recording.sampling_frequency, self.name + '_window_' + str(i)))
         self.recording_windows = recording_windows
+        return recording_windows
 
     def windows_hps(self):
         windows_hps = []
@@ -85,6 +88,7 @@ class Epoch:
             fig.update_yaxes(title_text="Power", row=2, col=1)
             fig.update_yaxes(title_text="Power", row=3, col=1)
             fig.show(renderer='browser')
+
 
 
 
