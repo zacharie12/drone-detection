@@ -64,6 +64,7 @@ class Recording:
         self.sampling_frequency = sampling_frequency
         self.name = name
         self.cropped_data = None
+        self.duration = self.audio_data.length / self.sampling_frequency
 
     def crop(self, start_sec, end_sec):
         start_index = int(start_sec * self.sampling_frequency)

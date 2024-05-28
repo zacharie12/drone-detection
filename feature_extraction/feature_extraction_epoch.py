@@ -2,7 +2,6 @@ import numpy as np
 from numpy.linalg import norm
 
 def sparsity(x):
-    """ returns relative sparsity of a spectrum"""
     n = len(x)
     norm_l1 = norm(x, 1)
     norm_l2 = norm(x)
@@ -14,7 +13,8 @@ def get_hps_features(epoch):
     hps_freqs = epoch.hps.x
     hps_values = epoch.hps.y
     hps_max_freq_pitch_search = 180
-    freq = hps_freqs[np.argmax(hps_values[:hps_max_freq_pitch_search])]
+    hps_max_freq_pitch_index = int(hps_max_freq_pitch_search / hps_freqs[1])
+    freq = hps_freqs[np.argmax(hps_values[:hps_max_freq_pitch_index])]
     sparsity_score = sparsity(hps_values)
     strength = np.max(hps_values)
     return freq, sparsity_score, strength
@@ -54,7 +54,7 @@ class FeatureExtractionEpoch(object):
         self.features['bandpassed_rms'] = self.epoch.bandpassed_recording.audio_data.rms()
         self.features['bandpassed_crest_factor'] = self.epoch.bandpassed_recording.audio_data.crest_factor()
         self.features["1500_to_max_rms"] = self.epoch.recording.psd.frequency_band_rms(1500)
-        freq, spars, strgth = self.get_hps_features(self.epoch)
+        freq, spars, strgth = get_hps_features(self.epoch)
         self.features["pitch_frequency"] = freq
         self.features["hps_sparsity"] = spars
         self.features["pitch_strength"] = strgth
