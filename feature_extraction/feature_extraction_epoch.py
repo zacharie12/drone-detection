@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.linalg import norm
 
+
 def sparsity(x):
     n = len(x)
     norm_l1 = norm(x, 1)
@@ -46,8 +47,6 @@ class FeatureExtractionEpoch(object):
 
     def get_feature_names(self):
         return self.features.keys()
-
-
 
     def extract_features(self):
         self.features['full_bandwidth_rms'] = self.epoch.recording.audio_data.rms()
