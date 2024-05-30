@@ -23,6 +23,4 @@ if __name__ == '__main__':
             stream.manually_label_samples()
             streams.append(stream)
             print(f"finished creating stream for {file}")
-            a = 5
     dataset = Dataset(streams)
-    a = 5
