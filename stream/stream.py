@@ -1,62 +1,77 @@
-from drone_detection.epoch.epoch_class import Epoch
+from drone_detection.sample.sample import Sample
 from drone_detection.recording_class.recording import Recording
-from drone_detection.feature_extraction.feature_extraction_epoch import FeatureExtractionEpoch
+from drone_detection.feature_extraction.feature_extraction_sample import FeatureExtractionSample
 
 
 class Stream():
-    def __init__(self, name=None):
-        self.epochs_list = []
-        self.epoch_features_list = []
-        self.labels = []
+    def __init__(self, recording, sample_window_duration_sec=0.5, window_ovelap_sec=0, limit_num_windows=False, name=None, labels=None):
+        if window_ovelap_sec > sample_window_duration_sec:
+            raise ValueError("Overlap duration cannot be greater than sample window duration")
+        self.recording = recording
         self.name = name
+        self.samples_list = []
+        self.split_long_recording_into_samples(
+            long_recording=recording,
+            window_overlap_seconds=window_ovelap_sec,
+            window_length_seconds=sample_window_duration_sec,
+            limit_num_windows=limit_num_windows,
+            labels=labels)
 
-    def set_labels(self, labels):
-        self.labels = labels
-        if len(self.labels) != len(self.epochs_list):
-            raise Warning("Number of labels and epochs do not match")
+    def manually_label_sample(self, sample_num):
+        self.samples_list[sample_num].set_label()
 
-    def split_long_recording_into_epochs(self, long_recording, window_length_seconds=0.5, limit_num_windows=False):
-        def _window_recording(recording, window_length_sec=0.5):
+    def manually_label_samples(self, start_sample=0, end_sample=None):
+        if end_sample is None:
+            end_sample = len(self.samples_list)
+        for i in range(start_sample, end_sample):
+            self.manually_label_sample(i)
+
+    def split_long_recording_into_samples(self, long_recording, window_length_seconds, window_overlap_seconds, limit_num_windows, labels):
+        def _calc_num_windows(long_recording, window_length_seconds, window_overlap_seconds):
+            N = long_recording.audio_data.length
+            window_size_samples = int(window_length_seconds * long_recording.sampling_frequency)
+            overlap_samples = int(window_overlap_seconds * long_recording.sampling_frequency)
+            num_windows = int((N - window_size_samples) / (window_size_samples - overlap_samples)) + 1
+            return num_windows
+
+        def _window_recording(recording, window_length_sec, window_overlap):
+            num_windows = _calc_num_windows(recording, window_length_sec, window_overlap)
             recording_windows = []
-            num_windows = int(recording.audio_data.length / (window_length_sec * recording.sampling_frequency))
             for i in range(num_windows):
-                start = i * window_length_sec
-                end = (i + 1) * window_length_sec
+                start = i * (window_length_sec - window_overlap)
+                end = start + window_length_sec
                 recording_window = recording.crop(start, end)
                 recording_windows.append(Recording(recording_window.values, recording.sampling_frequency,
                                                    recording.name + '_window_' + str(i)))
             return recording_windows
 
-        epochs = []
-        num_windows = int(long_recording.audio_data.length / (window_length_seconds * long_recording.sampling_frequency))
-        for i, w in enumerate(_window_recording(long_recording, window_length_seconds)):
+        samples = []
+        num_windows = _calc_num_windows(long_recording, window_length_seconds, window_overlap_seconds)
+        if labels is not None:
+            if len(labels) != num_windows:
+                raise Warning("Number of labels does not match number of windows")
+                labels = None
+        for i, w in enumerate(_window_recording(long_recording, window_length_seconds, window_overlap_seconds)):
             if limit_num_windows and i > limit_num_windows:
                 print(f"reached limit of {limit_num_windows} windows")
                 break
-            print(f"creating epoch of window {i} out of {num_windows}")
-            epoch = Epoch(w, f"{long_recording.name}_window_{i}")
-            epoch.preprocess()
-            epoch.calc_hps()
-            epochs.append(epoch)
-        self.epochs_list.extend(epochs)
+            print(f"creating sample of window {i} out of {num_windows}")
+            sample = Sample(w, w.name, labels[i] if labels is not None else None)
+            samples.append(sample)
+        self.samples_list.extend(samples)
 
-    def add_epochs(self, epochs):
-        self.epochs_list.extend(epochs)
+    def add_samples(self, samples):
+        if isinstance(samples, list):
+            self.samples_list.extend(samples)
+        else:
+            self.samples_list.append(samples)
 
-    def extract_features_all_epochs(self):
-        for i, epoch in enumerate(self.epochs_list):
-            if i > 1:
-                previous_epochs = self.epochs_list[i-2:i]
-            else:
-                previous_epochs = None
-            if i < len(self.epoch_features_list):
+    def extract_features_all_samples(self):
+        for i, sample in enumerate(self.samples_list):
+            if i < len(self.stream_features_list):
                 continue
-            self.epoch_features_list.append(self.extract_features_single_epoch(epoch, previous_epochs))
+            self.samples_features_list.append(sample.extract_features())
 
-    def extract_features_single_epoch(self, epoch, previous_epochs):
-        epoch_features_class = FeatureExtractionEpoch(epoch, previous_epochs)
-        epoch_features_class.extract_features()
-        return epoch_features_class.get_features()
-
-    def predict_epochs(self): # placeholder
+    def predict_stream(self): # placeholder
         return None
+

@@ -1,5 +1,5 @@
 from recording_class.recording import Recording
-from epoch.epoch_class import Epoch
+from sample.sample import Sample
 from moviepy.editor import VideoFileClip
 import librosa as lr
 import plotly.graph_objects as go
@@ -22,7 +22,7 @@ def visualize_tsne(features_list):
     # Plot the embedded features
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=embedded_features[:, 0], y=embedded_features[:, 1], mode='markers'))
-    fig.update_layout(title_text='t-SNE Visualization of Epoch Features')
+    fig.update_layout(title_text='t-SNE Visualization of Sample Features')
     fig.show(renderer='browser')
 
 
@@ -57,20 +57,20 @@ if __name__ == '__main__':
             path = os.path.join(directory, file)
             recording = from_mp4(path)
             print(f"finished loading {file}")
-            stream = Stream()
+            stream = Stream(name=path.split('/')[-1].split('.')[0])
             epochs = []
             window_length_seconds = 0.5
             num_windows = int(recording.audio_data.length / (window_length_seconds * recording.sampling_frequency))
             for i, w in enumerate(window_recording(recording, window_length_seconds)):
                 print(f"creating epoch of window {i} out of {num_windows}")
-                epoch = Epoch(w, path.split('/')[-1].split('.')[0])
+                epoch = Sample(w, path.split('/')[-1].split('.')[0])
                 epoch.preprocess()
                 epoch.calc_hps()
                 epochs.append(epoch)
             stream.add_epochs(epochs)
             print(f"finished creating epochs for {file}, starting feature extraction")
             stream.extract_features_all_epochs()
-            # visualize_tsne(stream.epoch_features_list[2:])
+            # visualize_tsne(stream.stream_features_list[2:])
             print(f"finished feature extraction for {file}")
             streams.append(stream)
             a = 5
