@@ -2,9 +2,11 @@ from drone_detection.utils import from_mp4
 from dataset.dataset import Dataset
 import os
 from stream.stream import Stream
+import pickle
 sample_window_duration_sec = 0.5
 window_ovelap_sec = 0.25
-limit_num_windows = 50
+limit_num_windows = False
+
 
 if __name__ == '__main__':
     streams = []
@@ -24,3 +26,6 @@ if __name__ == '__main__':
             streams.append(stream)
             print(f"finished creating stream for {file}")
     dataset = Dataset(streams)
+    dataset.remove_recordings()
+    with open('dataset.pkl', 'wb') as f:
+        pickle.dump(dataset, f)

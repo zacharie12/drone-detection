@@ -75,3 +75,8 @@ class Stream():
     def predict_stream(self): # placeholder
         return None
 
+    def remove_recordings(self):
+        self.recording = None
+        for sample in self.samples_list:
+            sample.remove_recording()
+
