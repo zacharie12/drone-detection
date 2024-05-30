@@ -13,7 +13,7 @@ class Dataset():
         self.dataframe = self.make_dataframe_of_feats_and_labels()
 
     def __len__(self):
-        return len(self.stream)
+        return len(self.streams)
 
     def add_stream(self, stream):
         self.streams.append(stream)

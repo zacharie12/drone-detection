@@ -1,5 +1,5 @@
 from scipy.signal import butter, filtfilt, periodogram, medfilt, lfilter
-from drone_detection.recording_class.recording import Recording, FrequencyVector
+from recording_class.recording import Recording, FrequencyVector
 import numpy as np
 from scipy.interpolate import interp1d
 from scipy.fftpack import next_fast_len

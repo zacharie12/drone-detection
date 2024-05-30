@@ -1,6 +1,6 @@
-from drone_detection.sample.sample import Sample
-from drone_detection.recording_class.recording import Recording
-from drone_detection.feature_extraction.feature_extraction_sample import FeatureExtractionSample
+from sample.sample import Sample
+from recording_class.recording import Recording
+from feature_extraction.feature_extraction_sample import FeatureExtractionSample
 
 
 class Stream():

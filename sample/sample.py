@@ -1,17 +1,17 @@
-from drone_detection.preprocessing.preprocessing import bpf, HPS
-from drone_detection.recording_class.recording import Recording, Vector
+from preprocessing.preprocessing import bpf, HPS
+from recording_class.recording import Recording, Vector
 from plotly.subplots import make_subplots
-from drone_detection.feature_extraction.feature_extraction_sample import FeatureExtractionSample
+from feature_extraction.feature_extraction_sample import FeatureExtractionSample
 import plotly.graph_objects as go
 
 
 class Sample:
 
-    def __init__(self, recording, name=None, label=None):
+    def __init__(self, recording, name=None, label=None, create_label=False):
         # labels: 0 = no drone, 1 = ababil, 2 = hermes, 3 = both
         self.recording = recording
         self.name = name
-        self.label = self.set_label(label) if label is not None else None
+        self.label = self.set_label(label) if label is not None and create_label else None
         self.preprocess()
         self.calc_hps()
         self.features = FeatureExtractionSample(self).extract_features()
