@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.linalg import norm
 
+
 def sparsity(x):
     n = len(x)
     norm_l1 = norm(x, 1)
@@ -9,25 +10,16 @@ def sparsity(x):
     return sparsity_score
 
 
-def get_hps_features(epoch):
-    hps_freqs = epoch.hps.x
-    hps_values = epoch.hps.y
-    hps_max_freq_pitch_search = 180
-    hps_max_freq_pitch_index = int(hps_max_freq_pitch_search / hps_freqs[1])
-    freq = hps_freqs[np.argmax(hps_values[:hps_max_freq_pitch_index])]
-    sparsity_score = sparsity(hps_values)
-    strength = np.max(hps_values)
-    return freq, sparsity_score, strength
 
 
-class FeatureExtractionEpoch(object):
-    def __init__(self, epoch, previous_epochs=None):
+
+class FeatureExtractionSample(object):
+    def __init__(self, epoch):
         self.epoch = epoch
-        self.previous_epochs = previous_epochs
         self.features = {}
 
     def __str__(self):
-        return "Epoch: " + str(self.epoch) + " Features: " + str(self.features)
+        return "Sample: " + str(self.epoch) + " Features: " + str(self.features)
 
     def __repr__(self):
         return self.__str__()
@@ -47,23 +39,30 @@ class FeatureExtractionEpoch(object):
     def get_feature_names(self):
         return self.features.keys()
 
-
+    def calc_hps_features(self):
+        hps_freqs = self.epoch.hps.x
+        hps_values = self.epoch.hps.y
+        hps_max_freq_pitch_search = 180
+        hps_max_freq_pitch_index = int(hps_max_freq_pitch_search / hps_freqs[1])
+        freq = hps_freqs[np.argmax(hps_values[:hps_max_freq_pitch_index])]
+        sparsity_score = sparsity(hps_values)
+        strength = np.max(hps_values[:hps_max_freq_pitch_index]) / np.sum(hps_values[:hps_max_freq_pitch_index])
+        return freq, sparsity_score, strength
 
     def extract_features(self):
         self.features['full_bandwidth_rms'] = self.epoch.recording.audio_data.rms()
         self.features['bandpassed_rms'] = self.epoch.bandpassed_recording.audio_data.rms()
         self.features['bandpassed_crest_factor'] = self.epoch.bandpassed_recording.audio_data.crest_factor()
         self.features["1500_to_max_rms"] = self.epoch.recording.psd.frequency_band_rms(1500)
-        freq, spars, strgth = get_hps_features(self.epoch)
+        freq, spars, strgth = self.calc_hps_features()
         self.features["pitch_frequency"] = freq
         self.features["hps_sparsity"] = spars
         self.features["pitch_strength"] = strgth
-        if self.previous_epochs is not None:
-            self.extract_previous_epoch_features()
+        return self.features
 
-    def extract_previous_epoch_features(self):
-        for i, epoch in enumerate(self.previous_epochs):
-            freq, spars, strgth = get_hps_features(epoch)
-            self.features[f"previous_epoch_pitch_frequency_{i}"] = freq
-            self.features[f"previous_epoch_hps_sparsity_{i}"] = spars
-            self.features[f"previous_epoch_pitch_strength_{i}"] = strgth
+    # def extract_previous_epoch_features(self):
+    #     for i, sample in enumerate(self.previous_epochs):
+    #         freq, spars, strgth = get_hps_features(sample)
+    #         self.features[f"previous_epoch_pitch_frequency_{i}"] = freq
+    #         self.features[f"previous_epoch_hps_sparsity_{i}"] = spars
+    #         self.features[f"previous_epoch_pitch_strength_{i}"] = strgth

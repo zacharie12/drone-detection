@@ -1,5 +1,5 @@
 from recording_class.recording import Recording
-from epoch.epoch_class import Epoch
+from sample.sample import Sample
 from moviepy.editor import VideoFileClip
 import sounddevice as sd
 import librosa as lr
@@ -32,10 +32,10 @@ if __name__ == '__main__':
             row = video_cropping_times.loc[video_cropping_times['video_name']==file[:-4]]
             recording.crop(row["start_sec"].values[0], row["end_sec"].values[0])
             # recording.play_audio()
-            epoch = Epoch(recording, path.split('/')[-1].split('.')[0])
+            epoch = Sample(recording, path.split('/')[-1].split('.')[0])
             epoch.preprocess()
-            # epoch.recording.visualize()
-            # epoch.bandpassed_recording.visualize()
+            # sample.recording.visualize()
+            # sample.bandpassed_recording.visualize()
             epoch.crop(row["start_sec"].values[0], row["end_sec"].values[0])
             epoch.cropped_recording.visualize()
             epoch.cropped_recording.play_audio()
