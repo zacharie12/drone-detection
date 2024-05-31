@@ -66,9 +66,11 @@ class Recording:
         self.cropped_data = None
         self.duration = self.audio_data.length / self.sampling_frequency
 
-    def crop(self, start_sec, end_sec):
+    def crop(self, start_sec, end_sec, overwrite=False):
         start_index = int(start_sec * self.sampling_frequency)
         end_index = int(end_sec * self.sampling_frequency)
+        if overwrite:
+            self.audio_data = TimeVector(self.audio_data.values[start_index:end_index], self.sampling_frequency)
         return TimeVector(self.audio_data.values[start_index:end_index], self.sampling_frequency)
 
     def create_spectrogram(self, use_cropped=True):

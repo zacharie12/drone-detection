@@ -21,28 +21,33 @@ limit_num_windows = False
 
 if __name__ == '__main__':
     streams = []
-    #directory = "/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Red/Ababil T" #red
+    directory = "/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Red/Ababil T" #red
     # directory = "/Users/ocarmi/Documents/private/Aurras/drone_detection/OSINT/OSINT/Blue" # blue
 
-    directory = "/Users/zachariecohen/Desktop/drone-detection/Red/Ababil T" #red
+    # directory = "/Users/zachariecohen/Desktop/drone-detection/Red/Ababil T" #red
     # directory = "/Users/zachariecohen/Desktop/drone-detection/OSINT/OSINT/Blue" # blue
-
+    labeled_files = []
     for file in os.listdir(directory):
         if file.endswith(".mp4"):
             path = os.path.join(directory, file)
             recording = from_mp4(path)
+            if '20nov' in file:
+                continue
             print(f"finished loading {file}")
             stream = Stream(recording=recording,
                             sample_window_duration_sec=sample_window_duration_sec,
                             window_ovelap_sec=window_ovelap_sec,
                             limit_num_windows=limit_num_windows,
                             name=path.split('/')[-1].split('.')[0])
-           # stream.manually_label_samples()
+            stream.manually_label_samples()
+            labeled_files.append(file)
             streams.append(stream)
+            with open(f'{file}_stream_class_with_labels.pkl', 'wb') as f:
+                pickle.dump(stream, f)
             print(f"finished creating stream for {file}")
     dataset = Dataset(streams)
     dataset.remove_recordings()
-    with open('dataset.pkl', 'wb') as f:
+    with open('dataset_oc1.pkl', 'wb') as f:
         pickle.dump(dataset, f)
 
 dataset.dataframe['label'] = np.random.choice([0, 1], size=len(dataset.dataframe))

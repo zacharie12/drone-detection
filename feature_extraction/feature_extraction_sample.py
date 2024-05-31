@@ -60,9 +60,5 @@ class FeatureExtractionSample(object):
         self.features["pitch_strength"] = strgth
         return self.features
 
-    # def extract_previous_epoch_features(self):
-    #     for i, sample in enumerate(self.previous_epochs):
-    #         freq, spars, strgth = get_hps_features(sample)
-    #         self.features[f"previous_epoch_pitch_frequency_{i}"] = freq
-    #         self.features[f"previous_epoch_hps_sparsity_{i}"] = spars
-    #         self.features[f"previous_epoch_pitch_strength_{i}"] = strgth
+
+

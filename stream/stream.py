@@ -1,10 +1,10 @@
-from sample.sample import Sample
-from recording_class.recording import Recording
-from feature_extraction.feature_extraction_sample import FeatureExtractionSample
+from drone_detection.sample.sample import Sample
+from drone_detection.recording_class.recording import Recording
+from drone_detection.feature_extraction.feature_extraction_sample import FeatureExtractionSample
 
 
 class Stream():
-    def __init__(self, recording, sample_window_duration_sec=0.5, window_ovelap_sec=0, limit_num_windows=False, name=None, labels=None):
+    def __init__(self, recording, sample_window_duration_sec=0.5, window_ovelap_sec=0, limit_num_windows=False, num_lookback_samples=3, name=None, labels=None):
         if window_ovelap_sec > sample_window_duration_sec:
             raise ValueError("Overlap duration cannot be greater than sample window duration")
         self.recording = recording
@@ -16,6 +16,7 @@ class Stream():
             window_length_seconds=sample_window_duration_sec,
             limit_num_windows=limit_num_windows,
             labels=labels)
+        self.add_previous_samples_features(num_lookback_samples=num_lookback_samples)
 
     def manually_label_sample(self, sample_num):
         self.samples_list[sample_num].set_label()
@@ -79,4 +80,20 @@ class Stream():
         self.recording = None
         for sample in self.samples_list:
             sample.remove_recording()
+
+    def remove_samples(self, sample_num):
+        for i in sample_num:
+            self.samples_list.pop(i)
+
+    def add_previous_samples_features(self, num_lookback_samples):
+        for i, sample in enumerate(self.samples_list):
+            feats = {}
+            if i > num_lookback_samples:
+                for j in range(1, num_lookback_samples+1):
+                    feats[f'pitch_frequency_lookback_{j}'] = self.samples_list[i-j].features["pitch_frequency"]
+                    feats[f'hps_sparsity_lookback_{j}'] = self.samples_list[i-j].features["hps_sparsity"]
+                    feats[f'pitch_strength_lookback_{j}'] = self.samples_list[i-j].features["pitch_strength"]
+                sample.add_features(feats)
+        self.samples_list = self.samples_list[num_lookback_samples+1:]
+
 

@@ -38,7 +38,7 @@ class Sample:
 
     def add_features(self, features):
         if isinstance(features, dict):
-            for feat_name, feat_value in features:
+            for feat_name, feat_value in features.items():
                 self.features[feat_name] = feat_value
 
     def set_label(self, label=None):
