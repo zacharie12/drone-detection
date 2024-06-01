@@ -64,8 +64,10 @@ class Sample:
         pass
 
     def remove_recording(self):
-        del self.recording
-        del self.bandpassed_recording
+        if hasattr(self, 'recording'):
+            del self.recording
+        if hasattr(self, 'bandpassed_recording'):
+            del self.bandpassed_recording
         if hasattr(self, 'cropped_recording'):
             del self.cropped_recording
         del self.hps
