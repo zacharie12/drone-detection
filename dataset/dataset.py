@@ -24,7 +24,8 @@ class Dataset():
             for i, samples in enumerate(stream.samples_list):
                 data.append(list(samples.features.values()) + [samples.label])
         columns = list(stream.samples_list[0].features.keys()) + ['label']
-        return pd.DataFrame(data, columns=columns)
+        self.dataframe = pd.DataFrame(data, columns=columns)
+        return self.dataframe
 
     def remove_recordings(self):
         for stream in self.streams:

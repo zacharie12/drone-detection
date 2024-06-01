@@ -19,11 +19,12 @@ class Stream():
         self.add_previous_samples_features(num_lookback_samples=num_lookback_samples)
 
     def manually_label_sample(self, sample_num):
-        self.samples_list[sample_num].set_label()
+        self.samples_list[sample_num].set_label(window_num=sample_num)
 
     def manually_label_samples(self, start_sample=0, end_sample=None):
         if end_sample is None:
             end_sample = len(self.samples_list)
+        print(f"Manually labeling samples {start_sample} to {end_sample}. Press p to replay audio.")
         for i in range(start_sample, end_sample):
             self.manually_label_sample(i)
 

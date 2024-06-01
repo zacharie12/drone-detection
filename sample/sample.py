@@ -41,16 +41,22 @@ class Sample:
             for feat_name, feat_value in features.items():
                 self.features[feat_name] = feat_value
 
-    def set_label(self, label=None):
+    def set_label(self, label=None, window_num=None):
         if label in [0, 1, 2, 3]:
             self.label = label
         else:
             self.recording.play_audio()
             while True:
-                label = input("Enter label (0, 1, 2, 3): ")
+                if window_num is not None:
+                    txt = f"Enter label for window {window_num} (0 - no UAV, 1 - red UAV, 2 - blue UAV, 3 - Both/Unknown): "
+                else:
+                    txt = "Enter label (0 - no UAV, 1 - red UAV, 2 - blue UAV, 3 - Both/Unknown): "
+                label = input(txt)
                 if label in ['0', '1', '2', '3']:
                     self.label = int(label)
                     break
+                elif label == 'p':
+                    self.play_audio()
                 else:
                     print("Invalid label. Please enter 0, 1, 2 or 3.")
 
