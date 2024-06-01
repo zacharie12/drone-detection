@@ -18,13 +18,14 @@ class Dataset():
     def add_stream(self, stream):
         self.streams.append(stream)
 
-    def make_dataframe_of_feats_and_labels(self):
+    def make_dataframe_of_feats_and_labels(self, override=True):
         data = []
         for stream in self.streams:
             for i, samples in enumerate(stream.samples_list):
                 data.append(list(samples.features.values()) + [samples.label])
         columns = list(stream.samples_list[0].features.keys()) + ['label']
-        self.dataframe = pd.DataFrame(data, columns=columns)
+        if override:
+            self.dataframe = pd.DataFrame(data, columns=columns)
         return self.dataframe
 
     def remove_recordings(self):
