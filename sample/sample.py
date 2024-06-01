@@ -42,23 +42,23 @@ class Sample:
                 self.features[feat_name] = feat_value
 
     def set_label(self, label=None, window_num=None):
-        if label in [0, 1, 2, 3]:
+        if label in [0, 1, 2, 3, 4]:
             self.label = label
         else:
             self.recording.play_audio()
             while True:
                 if window_num is not None:
-                    txt = f"Enter label for window {window_num} (0 - no UAV, 1 - red UAV, 2 - blue UAV, 3 - Both/Unknown): "
+                    txt = f"Enter label for window {window_num} (0 - no UAV, 1 - red UAV, 2 - blue UAV, 3 - Both, 4- Unknown): "
                 else:
-                    txt = "Enter label (0 - no UAV, 1 - red UAV, 2 - blue UAV, 3 - Both/Unknown): "
+                    txt = "Enter label (0 - no UAV, 1 - red UAV, 2 - blue UAV, 3 - Both, 4- Unknown): "
                 label = input(txt)
-                if label in ['0', '1', '2', '3']:
+                if label in ['0', '1', '2', '3', '4']:
                     self.label = int(label)
                     break
                 elif label == 'p':
                     self.play_audio()
                 else:
-                    print("Invalid label. Please enter 0, 1, 2 or 3.")
+                    print("Invalid label. Please enter 0, 1, 2, 3 or 4.")
 
     def predict(self):
         pass
