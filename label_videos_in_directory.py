@@ -9,15 +9,18 @@ import datetime
 if __name__ == '__main__':
     streams = []
     dir = input("Enter the directory full path: ")
+    most_recent_dataset_path = input("Enter the full path of the final dataset: ")
+    dataset = pickle.load(open(most_recent_dataset_path, 'rb'))
+    labeled_videos = [stream.name for stream in dataset.streams]
     initials = input("Enter your initials for the output file name:")
     for file in os.listdir(dir):
         if file.endswith('.mp4'):
             path = os.path.join(dir, file)
-            stream = label_single_video(path, initials, sample_window_duration_sec, window_ovelap_sec, limit_num_windows)
-            stream.remove_recordings()
-            streams.append(stream)
-    final_dataset_path = input("Enter the full path of the final dataset: ")
-    dataset = pickle.load(open(final_dataset_path, 'rb'))
+            if path.split('/')[-1].split('.')[0] in labeled_videos:
+                print("This video has already been labeled.")
+            else:
+                stream = label_single_video(path, initials, sample_window_duration_sec, window_ovelap_sec, limit_num_windows)
+                streams.append(stream)
     for stream in streams:
         dataset.add_stream(stream)
     dataset.make_dataframe_of_feats_and_labels()

@@ -4,14 +4,19 @@ sample_window_duration_sec = 0.5
 window_ovelap_sec = 0.25
 limit_num_windows = False
 import datetime
+import os
 
 if __name__ == '__main__':
     path = input("Enter the full path of the video file: ")
-    most_recent_dataset = input("Enter the full path of the most recent dataset: ")
+    most_recent_dataset_path = input("Enter the full path of the most recent dataset: ")
     initials = input("Enter your initials for the output file name:")
-    stream = label_single_video(path, initials, sample_window_duration_sec, window_ovelap_sec, limit_num_windows)
-    dataset = pickle.load(open(most_recent_dataset, 'rb'))
-    dataset.add_stream(stream)
-    dataset.make_dataframe_of_feats_and_labels()
-    with open(f'dataset/labeled_datasets/final_dataset_{initials}_{datetime.datetime.now()}.pkl', 'wb') as f:
-        pickle.dump(dataset, f)
+    dataset = pickle.load(open(most_recent_dataset_path, 'rb'))
+    labeled_videos = [stream.name for stream in dataset.streams]
+    if path.split('/')[-1].split('.')[0] in labeled_videos:
+        print("This video has already been labeled.")
+    else:
+        stream = label_single_video(path, initials, sample_window_duration_sec, window_ovelap_sec, limit_num_windows)
+        dataset.add_stream(stream)
+        dataset.make_dataframe_of_feats_and_labels()
+        with open(f'dataset/labeled_datasets/final_dataset_{initials}_{datetime.datetime.now()}.pkl', 'wb') as f:
+            pickle.dump(dataset, f)
