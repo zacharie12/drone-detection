@@ -1,4 +1,4 @@
-from utils import from_mp4, label_single_video
+from utils import label_single_video
 import pickle
 import os
 sample_window_duration_sec = 0.5
