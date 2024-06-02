@@ -11,7 +11,8 @@ class Sample:
         # labels: 0 = no drone, 1 = ababil, 2 = hermes, 3 = both
         self.recording = recording
         self.name = name
-        self.label = self.set_label(label) if label is not None and create_label else None
+        if create_label:
+            self.label = label
         self.preprocess()
         self.calc_hps()
         self.features = FeatureExtractionSample(self).extract_features()
