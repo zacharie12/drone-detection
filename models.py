@@ -1,30 +1,45 @@
 from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
+import torch
+import torch.nn as nn
+import torch.optim as optim
 
 
-class CustomSVM:
-    def __init__(self, kernel, **kwargs):
-        """
-        Custom SVM class constructor.
+class CustomMLP(nn.Module):
+    def __init__(self, input_size, hidden_layers, output_size):
+        super(CustomMLP, self).__init__()
+        layers = []
+        for hidden_size in hidden_layers:
+            layers.append(nn.Linear(input_size, hidden_size))
+            layers.append(nn.ReLU())
+            input_size = hidden_size
+        layers.append(nn.Linear(hidden_layers[-1], output_size))
+        self.network = nn.Sequential(*layers)
 
-        Parameters:
-        - kernel: str, the kernel type ('linear', 'poly', 'rbf', 'sigmoid')
-        - kwargs: additional keyword arguments for hyperparameters
+    def forward(self, x):
+        return self.network(x)
 
-        Example usage:
-        svm_model = CustomSVM(kernel='poly', degree=3, gamma='scale', coef0=1, C=1.0)
-        svm_model = CustomSVM(kernel='rbf', gamma=0.1, C=1.0)
-        """
-        self.kernel = kernel
-        self.kwargs = kwargs
-        self.model = None
 
-    def get_model(self):
-        """
-        Method to get the configured SVM model.
+class CustomLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, output_size):
+        super(CustomLSTM, self).__init__()
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, output_size)
 
-        Returns:
-        - an instance of SVC with the specified kernel and hyperparameters
-        """
-        # Create the SVM model with the specified kernel and hyperparameters
-        self.model = SVC(kernel=self.kernel, probability=True, **self.kwargs)
-        return self.model
+    def forward(self, x):
+        _, (h_n, _) = self.lstm(x)
+        out = self.fc(h_n[-1])
+        return out
+
+
+class CustomGRU(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, output_size):
+        super(CustomGRU, self).__init__()
+        self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        _, h_n = self.gru(x)
+        out = self.fc(h_n[-1])
+        return out
