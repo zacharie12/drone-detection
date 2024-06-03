@@ -17,8 +17,11 @@ class Sample:
         self.calc_hps()
         self.features = FeatureExtractionSample(self).extract_features()
 
-    def visualize(self):
-        self.recording.visualize()
+    def visualize(self, processed=False, max_freq=1000):
+        if processed:
+            self.bandpassed_recording.visualize(max_freq)
+        else:
+            self.recording.visualize(max_freq)
 
     def crop(self, start_sec, end_sec):
         cropped_time_vector = self.bandpassed_recording.crop(start_sec, end_sec)

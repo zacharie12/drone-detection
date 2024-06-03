@@ -25,7 +25,7 @@ def bpf(recording, low, high, order=6, type='butter'):
     else:
         return recording
 
-def HPS(recording, nfft_factor=1, numProd=6, hanning_window=True, pre_whiten=True): # harnomic product spectrum
+def HPS(recording, nfft_factor=4, numProd=6, hanning_window=True, pre_whiten=True): # harnomic product spectrum
     nfft = recording.audio_data.length * nfft_factor
     fs = recording.sampling_frequency
     f = np.arange(nfft) / nfft
@@ -46,11 +46,13 @@ def HPS(recording, nfft_factor=1, numProd=6, hanning_window=True, pre_whiten=Tru
         xf_db = np.log(np.abs(xf))
         xf_db_whitened = xf_db - medfilt(xf_db, int(MEDIAN_FILTER_WINDOW_SIZE_HZ/freq_resolution/2)*2+1)
         xf = np.exp(xf_db_whitened)
+        xf_db_whitened[xf_db_whitened < 0] = 0
+        # xf_db_whitened[xf_db_whitened < 1] = 1
     # Downsample-multiply
     smallestLength = int(np.ceil(N / numProd))
-    hps = xf[:smallestLength].copy()
+    hps = xf_db_whitened[:smallestLength].copy()
     for i in range(2, numProd + 1):
-        hps *= xf[::i][:smallestLength] / np.sum(xf[::i][:smallestLength])
+        hps *= xf_db_whitened[::i][:smallestLength] / np.sum(xf_db_whitened[::i][:smallestLength])
     f = f[:smallestLength] * fs
 
     a=5
