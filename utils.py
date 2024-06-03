@@ -54,6 +54,8 @@ def label_single_video(path, initials,
                     limit_num_windows=limit_num_windows,
                     name=file)
     stream.manually_label_samples()
+    # for sample in stream.samples_list:
+    #     sample.label = 0
     stream.remove_recordings()
     with open(f'{file}_stream_class_with_labels_{initials}', 'wb') as f:
         pickle.dump(stream, f)
