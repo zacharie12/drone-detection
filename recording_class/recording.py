@@ -53,7 +53,7 @@ class FrequencyVector(Vector):
 
     def frequency_band_rms(self, low=0, high=None):
         low = np.max((int(low / self.freq_res), 0))
-        high = np.min(int(high / self.freq_res), self.nfft) if high is not None else self.nfft
+        high = np.min((int(high / self.freq_res), self.nfft)) if high is not None else self.nfft
         return np.sqrt(np.mean(self.values[low:high]) * self.original_data_size) / 2
 
 
