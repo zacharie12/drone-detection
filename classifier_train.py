@@ -10,6 +10,7 @@ from models import *
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.model_selection import GridSearchCV
 
 # Define hyperparameters for SVM model at the beginning of the script
 SVM_PARAMS = {
@@ -27,6 +28,7 @@ MLP_PARAMS = {
     'hidden_layers': [64, 32],
     'output_size': 1
 }
+'''
 LSTM_PARAMS = {
     'input_size': None,  # to be set after data is loaded
     'hidden_size': 128,
@@ -39,6 +41,7 @@ GRU_PARAMS = {
     'num_layers': 2,
     'output_size': 1
 }
+'''
 
 RF_PARAMS = {
     'n_estimators': 100,
@@ -50,6 +53,37 @@ XGB_PARAMS = {
     'max_depth': 3,
     'learning_rate': 0.1,
     'random_state': 42
+}
+
+SVM_PARAM_GRID = {
+    'C': [0.1, 1, 10],  # Regularization parameter
+    'kernel': ['rbf', 'linear'],  # Kernel type
+    'gamma': ['scale', 'auto'],  # Kernel coefficient for 'rbf', 'poly', and 'sigmoid'
+    'degree': [1, 2, 3, 4, 5, 6],
+    'coef0' : [-1.0, 0.0, 0.5, 1.0, 2.0],
+}
+
+MLP_PARAM_GRID = {
+    'hidden_layers': [
+        (64,), (128,), (256,), (512,),  # Single layer
+        (64, 32), (128, 64), (256, 128), (512, 128),  # Two layers
+        (128, 64, 32), (256, 128, 64), (512, 256, 64),  # Three layers
+        (256, 128, 64, 32), (512, 256, 128, 64),  # Four layers
+        (512, 256, 128, 64, 32)  # Five layers
+    ],
+    'learning_rate_init': [0.0001, 0.001, 0.01, 0.1, 0.3],  # Initial learning rate
+    'num_epoch': [5, 10, 15, 20, 30, 50],
+}
+
+RF_PARAM_GRID = {
+    'n_estimators': [10, 50, 100, 200, 500, 1000, 5000],  # The number of trees in the forest
+    'max_depth': [None, 5, 10, 15, 20, 30],  # The maximum depth of the tree
+}
+
+XGB_PARAM_GRID = {
+    'n_estimators': [50, 100, 200, 500, 1000, 2000],  # Number of gradient boosted trees
+    'max_depth': [3, 5, 7, 10],  # Maximum tree depth for base learners
+    'learning_rate': [0.001, 0.01, 0.1, 0.2, 0.5],  # Boosting learning rate
 }
 
 # Define training parameters
@@ -134,7 +168,10 @@ def test_pytorch_model(model, test_loader):
     return test_loss.item(), test_accuracy, test_precision, test_recall
 
 
-def train_evaluate_sklearn_model_with_relief(model, X_train, y_train, X_test, y_test):
+from sklearn.model_selection import GridSearchCV
+
+
+def train_evaluate_sklearn_model_with_relief(model, param_grid, X_train, y_train, X_test, y_test):
     performance_dict = {'num_features': [], 'accuracy': [], 'recall': [], 'precision': []}
 
     # Apply ReliefF feature selection
@@ -151,11 +188,15 @@ def train_evaluate_sklearn_model_with_relief(model, X_train, y_train, X_test, y_
         X_train_relief = X_train[:, top_features]
         X_test_relief = X_test[:, top_features]
 
-        # Train the model with the selected features
-        model.fit(X_train_relief, y_train)
+        # Perform Grid Search
+        grid_search = GridSearchCV(model, param_grid, cv=5, scoring='accuracy')
+        grid_search.fit(X_train_relief, y_train)
+
+        # Get the best model
+        best_model = grid_search.best_estimator_
 
         # Predict on the test set with the selected features
-        y_pred = model.predict(X_test_relief)
+        y_pred = best_model.predict(X_test_relief)
 
         # Calculate performance metrics
         accuracy = accuracy_score(y_test, y_pred)
@@ -206,8 +247,8 @@ def train_evaluate_sklearn_model_with_relief(model, X_train, y_train, X_test, y_
 
 if __name__ == '__main__':
 
-    model_name = 'mlp'  # Specify the model name here ('svm', 'randomforest', 'xgboost', 'mlp', 'lstm', 'gru')
-    with open('/Users/zachariecohen/drone-detection/dataset/labeled_datasets/final_dataset_oc_2024-06-02 13:31:20.603969.pkl', 'rb') as file:
+    model_name = 'randomforest'  # Specify the model name here ('svm', 'randomforest', 'xgboost', 'mlp')
+    with open('/Users/zachariecohen/Desktop/drone-detection/dataset/labeled_datasets/final_dataset_oc_2024-06-02 13:31:20.603969.pkl', 'rb') as file:
         dataset = pickle.load(file)
     dataset.dataframe = dataset.dataframe.dropna().reset_index(drop=True)
     # Separate the features and the labels
@@ -225,26 +266,65 @@ if __name__ == '__main__':
         X_temp, X_test, y_temp, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
         X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.125,
                                                           random_state=42)  # 0.125 x 0.8 = 0.1
+        print(f"Train size = {X_train.shape[0]}")
+        print(f"Val size = {X_val.shape[0]}")
+        print(f"Test size = {y_test.shape[0]}")
     else:
         # Split the dataset into training and test sets
         X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
         X_val, y_val = None, None
+        print(f"Train size = {X_train.shape[0]}")
+        print(f"Test size = {X_test.shape[0]}")
 
     if model_name.lower() in ['mlp', 'lstm', 'gru']:
         # For PyTorch models, create DataLoaders for train, val, and test sets
         train_loader = get_data_loader(X_train, y_train, BATCH_SIZE)
         val_loader = get_data_loader(X_val, y_val, BATCH_SIZE)
         test_loader = get_data_loader(X_test, y_test, BATCH_SIZE)
+
+    if model_name.lower() == 'mlp':
+        MLP_PARAMS['input_size'] = X_train.shape[1]
+        best_accuracy = 0
+        best_params = None
+        for hidden_layers in MLP_PARAM_GRID['hidden_layers']:
+            for learning_rate in MLP_PARAM_GRID['learning_rate_init']:
+                for num_epoch in MLP_PARAM_GRID['num_epoch']:
+                    MLP_PARAMS['hidden_layers'] = hidden_layers
+                    LEARNING_RATE = learning_rate
+                    NUM_EPOCHS = num_epoch
+                    model = CustomMLP(**MLP_PARAMS)
+                    train_pytorch_model(model, train_loader, val_loader, NUM_EPOCHS, LEARNING_RATE)
+                    _, accuracy, _, _ = test_pytorch_model(model, test_loader)
+                    if accuracy > best_accuracy:
+                        best_accuracy = accuracy
+                        best_params = {'hidden_layers': hidden_layers, 'learning_rate': learning_rate}
+            print(f"Best MLP parameters: {best_params}")
+
+    elif model_name.lower() == 'randomforest':
+        model = RandomForestClassifier(random_state=42)
+        accuracy, recall, precision = train_evaluate_sklearn_model_with_relief(model, RF_PARAM_GRID, X_train,
+                                                                               y_train, X_test, y_test)
+        print(f"Random Forest: Accuracy = {accuracy:.4f}, Recall = {recall:.4f}, Precision = {precision:.4f}")
+
+    elif model_name.lower() == 'xgboost':
+        model = XGBClassifier(random_state=42)
+        accuracy, recall, precision = train_evaluate_sklearn_model_with_relief(model, XGB_PARAM_GRID, X_train,
+                                                                               y_train, X_test, y_test)
+        print(f"XGBoost: Accuracy = {accuracy:.4f}, Recall = {recall:.4f}, Precision = {precision:.4f}")
+
+    elif model_name.lower() == 'svm':
+        model = SVC(random_state=42)
+        accuracy, recall, precision = train_evaluate_sklearn_model_with_relief(model, SVM_PARAM_GRID, X_train,
+                                                                               y_train, X_test, y_test)
+        print(f"SVM: Accuracy = {accuracy:.4f}, Recall = {recall:.4f}, Precision = {precision:.4f}")
+
+
+
+        '''
         # Create a PyTorch model based on the model_name
         if model_name.lower() == 'mlp':
             MLP_PARAMS['input_size'] = X_train.shape[1]
             model = CustomMLP(**MLP_PARAMS)
-        elif model_name.lower() == 'lstm':
-            LSTM_PARAMS['input_size'] = X_train.shape[1]
-            model = CustomLSTM(**LSTM_PARAMS)
-        elif model_name.lower() == 'gru':
-            GRU_PARAMS['input_size'] = X_train.shape[1]
-            model = CustomGRU(**GRU_PARAMS)
 
             # Train the PyTorch model
         train_pytorch_model(model, train_loader, val_loader, NUM_EPOCHS, LEARNING_RATE)
@@ -266,6 +346,5 @@ if __name__ == '__main__':
         accuracy, recall, precision = train_evaluate_sklearn_model_with_relief(model, X_train, y_train, X_test, y_test)
         print(f"SVM: Accuracy = {accuracy:.4f}, Recall = {recall:.4f}, Precision = {precision:.4f}")
 
-
-
+    '''
 
