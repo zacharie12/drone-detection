@@ -18,6 +18,7 @@ if __name__ == '__main__':
         stream = label_single_video(path, initials, sample_window_duration_sec, window_ovelap_sec, limit_num_windows)
         dataset.add_stream(stream)
         dataset.make_dataframe_of_feats_and_labels()
-        path_to_save = f'dataset/labeled_datasets/final_dataset_{initials}_{datetime.datetime.now()}.pkl'.replace('-', '_').replace(':', '_').replace(' ', '_').replace('.', '_')
+        file_name = f'final_dataset_{initials}_{datetime.datetime.now()}.pkl'.replace('-', '_').replace(':', '_').replace(' ', '_').replace('.', '_')
+        path_to_save = os.path.join('dataset', 'labeled_datasets', file_name)
         with open(path_to_save, 'wb') as f:
             pickle.dump(dataset, f)
