@@ -59,7 +59,7 @@ class FeatureExtractionSample(object):
         self.features["hps_sparsity"] = spars
         self.features["pitch_strength"] = strgth
         for i in range(100, 1000, 100):
-            self.features[f"{i}hz_{i + 100}hz_rms"] = self.epoch.psd.frequency_band_rms(i, i + 100)
+            self.features[f"{i}hz_{i + 100}hz_rms"] = self.epoch.recording.psd.frequency_band_rms(i, i + 100)
         return self.features
 
 
